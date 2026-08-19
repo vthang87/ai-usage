@@ -8,8 +8,8 @@ struct MenuBarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            providerSection(title: "Codex", usage: collector.snapshot.codex, showsReset: false)
-            providerSection(title: "Cursor", usage: collector.snapshot.cursor, showsReset: true)
+            providerSection(title: "Codex", usage: collector.snapshot.codex)
+            providerSection(title: "Cursor", usage: collector.snapshot.cursor)
             Divider()
             HStack {
                 Button(collector.isRefreshing ? "Refreshing…" : "Refresh") {
@@ -54,7 +54,7 @@ struct MenuBarView: View {
     }
 
     @ViewBuilder
-    private func providerSection(title: String, usage: ProviderUsage?, showsReset: Bool) -> some View {
+    private func providerSection(title: String, usage: ProviderUsage?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 providerMark(for: title)
@@ -69,18 +69,16 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
             if let usage, !usage.windows.isEmpty {
-                ForEach(Array(usage.windows.enumerated()), id: \.element.id) { index, window in
+                ForEach(usage.windows) { window in
                     HStack {
                         Text(window.label)
                         Spacer()
                         Text(UsageFormatting.percent(window.usedPercent))
                             .monospacedDigit()
                             .foregroundStyle(percentColor(window.usedPercent))
-                        if showsReset, index == usage.windows.count - 1 {
-                            Text(UsageFormatting.reset(window.resetsAt))
-                                .foregroundStyle(.secondary)
-                                .frame(minWidth: 52, alignment: .trailing)
-                        }
+                        Text(UsageFormatting.reset(window.resetsAt))
+                            .foregroundStyle(.secondary)
+                            .frame(minWidth: 52, alignment: .trailing)
                     }
                     .font(.callout)
                 }

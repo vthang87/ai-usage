@@ -42,7 +42,7 @@ enum JSONRPCStdioClient {
                 "clientInfo": [
                     "name": "ai_usage",
                     "title": "AI Usage",
-                    "version": "0.0.1",
+                    "version": "0.0.2",
                 ],
             ],
         ], to: stdin)
