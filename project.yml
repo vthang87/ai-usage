@@ -1,0 +1,103 @@
+name: AIUsage
+options:
+  bundleIdPrefix: com.thangdang
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  groupSortPosition: top
+
+settings:
+  SWIFT_VERSION: "6.0"
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
+  CODE_SIGN_STYLE: Automatic
+  ENABLE_HARDENED_RUNTIME: YES
+  COMBINE_HIDPI_IMAGES: YES
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "5"
+  SWIFT_STRICT_CONCURRENCY: complete
+
+schemes:
+  AIUsage:
+    build:
+      targets:
+        AIUsage: all
+        AIUsageWidget: all
+        AIUsageTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - AIUsageTests
+
+  AIUsageWidget:
+    build:
+      targets:
+        AIUsage: all
+        AIUsageWidget: all
+    run:
+      config: Debug
+      environmentVariables:
+        _XCWidgetKind: AIUsageSmall
+        _XCWidgetFamily: systemSmall
+
+targets:
+  AIUsage:
+    type: application
+    platform: macOS
+    sources:
+      - path: AIUsage
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+      - path: Shared
+    settings:
+      PRODUCT_NAME: AI Usage
+      PRODUCT_BUNDLE_IDENTIFIER: com.thangdang.AIUsage
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_FILE: AIUsage/Info.plist
+      INFOPLIST_KEY_CFBundleDisplayName: AI Usage
+      INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+      INFOPLIST_KEY_NSHumanReadableCopyright: Copyright © 2026
+      INFOPLIST_KEY_LSUIElement: YES
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      CODE_SIGN_ENTITLEMENTS: AIUsage/AIUsage.entitlements
+      LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+      OTHER_LDFLAGS: "-lsqlite3"
+    dependencies:
+      - target: AIUsageWidget
+        embed: true
+      - sdk: libsqlite3.tbd
+
+  AIUsageWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: AIUsageWidget
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+      - path: Shared
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.thangdang.AIUsage.widget
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_FILE: AIUsageWidget/Info.plist
+      INFOPLIST_KEY_CFBundleDisplayName: AI Usage
+      CODE_SIGN_ENTITLEMENTS: AIUsageWidget/AIUsageWidget.entitlements
+      LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+      SKIP_INSTALL: YES
+      APPLICATION_EXTENSION_API_ONLY: YES
+      SWIFT_STRICT_CONCURRENCY: complete
+      ENABLE_DEBUG_DYLIB: NO
+
+  AIUsageTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: AIUsageTests
+      - path: Shared
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.thangdang.AIUsage.tests
+      GENERATE_INFOPLIST_FILE: YES
