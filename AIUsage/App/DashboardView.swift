@@ -2,12 +2,18 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(UsageCollector.self) private var collector
+    @Environment(UpdateChecker.self) private var updates
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("AI Usage")
-                    .font(.title2.weight(.semibold))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AI Usage")
+                        .font(.title2.weight(.semibold))
+                    Text("v\(AppVersion.marketing)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
                 Text("Last updated \(UsageFormatting.lastUpdated(collector.snapshot.updatedAt))")
                     .font(.caption)
@@ -17,6 +23,15 @@ struct DashboardView: View {
                 }
                 .disabled(collector.isRefreshing)
                 .controlSize(.small)
+                Button(dashboardUpdateTitle) {
+                    if case .available = updates.status {
+                        updates.openAvailableRelease()
+                    } else {
+                        Task { await updates.check(force: true) }
+                    }
+                }
+                .disabled(updates.status == .checking)
+                .controlSize(.small)
             }
             HStack(alignment: .top, spacing: 12) {
                 ProviderCard(usage: collector.snapshot.codex, fallbackName: "Codex")
@@ -24,7 +39,18 @@ struct DashboardView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 440, minHeight: 280)
+        .frame(minWidth: 520, minHeight: 280)
+    }
+
+    private var dashboardUpdateTitle: String {
+        switch updates.status {
+        case .checking:
+            return "Checking…"
+        case let .available(version, _):
+            return "Download \(version)"
+        default:
+            return "Check Update"
+        }
     }
 }
 
