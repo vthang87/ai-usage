@@ -60,6 +60,25 @@ struct ParserTestRunner {
             "unavailable status"
         )
 
+        expect(SemanticVersion("v0.0.2") == SemanticVersion("0.0.2"), "strip v prefix")
+        expect(SemanticVersion("0.0.3")! > SemanticVersion("0.0.2")!, "patch bump is newer")
+        expect(SemanticVersion("1.0.0")! > SemanticVersion("0.9.9")!, "major bump is newer")
+        expect(SemanticVersion("0.0.2-beta")?.string == "0.0.2", "strip prerelease suffix")
+        expect(SemanticVersion("not-a-version") == nil, "reject invalid version")
+
+        let githubData = Data(#"{"tag_name":"v0.0.3","html_url":"https://github.com/vthang87/ai-usage/releases/tag/v0.0.3"}"#.utf8)
+        let release = try GitHubReleaseParser.latest(from: githubData)
+        expect(release.tagName == "v0.0.3", "github tag_name")
+        expect(release.version?.string == "0.0.3", "github semantic version")
+        expect(release.htmlURL.absoluteString.hasSuffix("/v0.0.3"), "github html_url")
+
+        do {
+            _ = try GitHubReleaseParser.latest(from: Data("{}".utf8))
+            expect(false, "empty github payload should throw")
+        } catch {
+            expect(true, "empty github payload throws")
+        }
+
         if failures > 0 {
             fputs("\(failures) test(s) failed\n", stderr)
             exit(1)

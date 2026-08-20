@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 enum AppServices {
     static let collector = UsageCollector()
+    static let updates = UpdateChecker()
 }
 
 @main
@@ -14,6 +15,7 @@ struct AIUsageApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environment(AppServices.collector)
+                .environment(AppServices.updates)
         } label: {
             MenuBarLabel(snapshot: AppServices.collector.snapshot)
         }
@@ -22,6 +24,7 @@ struct AIUsageApp: App {
         Window("Dashboard", id: "dashboard") {
             DashboardView()
                 .environment(AppServices.collector)
+                .environment(AppServices.updates)
                 .onAppear { NSApp.activate(ignoringOtherApps: true) }
         }
         .windowResizability(.contentSize)
@@ -30,6 +33,7 @@ struct AIUsageApp: App {
         Settings {
             SettingsView()
                 .environment(AppServices.collector)
+                .environment(AppServices.updates)
         }
     }
 }
@@ -39,5 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         AppServices.collector.start()
+        Task { await AppServices.updates.checkIfNeeded() }
     }
 }

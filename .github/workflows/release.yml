@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    name: Build DMG
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          xcode-select -p
+
+      - name: Verify tag matches MARKETING_VERSION
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(python3 -c 'import pathlib,re; t=pathlib.Path("project.yml").read_text(); m=re.search(r"MARKETING_VERSION:\s*\"([^\"]+)\"", t); print(m.group(1) if m else "")')"
+          echo "tag=$TAG version=$VERSION"
+          if [[ "$TAG" != "$VERSION" ]]; then
+            echo "Tag v$TAG does not match MARKETING_VERSION $VERSION in project.yml" >&2
+            exit 1
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Parser tests
+        run: make test
+
+      - name: Build Release DMG
+        run: ./dmg.sh
+
+      - name: Checksum
+        id: checksum
+        run: |
+          FILE="$(ls dist/AI-Usage-*.dmg)"
+          SHA="$(shasum -a 256 "$FILE" | awk '{print $1}')"
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$FILE")" >> "$GITHUB_OUTPUT"
+          ls -lh "$FILE"
+          echo "SHA-256 $SHA"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.checksum.outputs.name }}
+          path: dist/AI-Usage-*.dmg
+          if-no-files-found: error
+
+      - name: Attach DMG to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/AI-Usage-*.dmg
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true
+          body: |
+            macOS menu bar + WidgetKit app for **Codex** and **Cursor** usage (local collector, no AI Usage server).
+
+            ## Install
+
+            1. Download `${{ steps.checksum.outputs.name }}`
+            2. Open the disk image and drag **AI Usage** into Applications
+            3. First launch: **right-click → Open** (ad-hoc signed; Gatekeeper will warn)
+            4. Keep the app in the menu bar — it refreshes every 5 minutes by default
+
+            ## Notes
+
+            - Universal binary (Apple Silicon + Intel)
+            - Ad-hoc signed — not notarized
+            - SHA-256: `${{ steps.checksum.outputs.sha256 }}`

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Environment(UsageCollector.self) private var collector
+    @Environment(UpdateChecker.self) private var updates
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -10,6 +11,7 @@ struct MenuBarView: View {
             header
             providerSection(title: "Codex", usage: collector.snapshot.codex)
             providerSection(title: "Cursor", usage: collector.snapshot.cursor)
+            updateStatusLine
             Divider()
             HStack {
                 Button(collector.isRefreshing ? "Refreshing…" : "Refresh") {
@@ -20,6 +22,10 @@ struct MenuBarView: View {
                     NSApp.activate(ignoringOtherApps: true)
                     openWindow(id: "dashboard")
                 }
+                Button(checkUpdateTitle) {
+                    checkOrOpenUpdate()
+                }
+                .disabled(updates.status == .checking)
             }
             .controlSize(.small)
             HStack {
@@ -27,6 +33,9 @@ struct MenuBarView: View {
                     Text("Settings…")
                 }
                 Spacer()
+                Text("v\(AppVersion.marketing)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Button("Quit") {
                     NSApp.terminate(nil)
                 }
@@ -34,7 +43,7 @@ struct MenuBarView: View {
             .controlSize(.small)
         }
         .padding(14)
-        .frame(width: 280)
+        .frame(width: 312)
     }
 
     private var header: some View {
@@ -50,6 +59,49 @@ struct MenuBarView: View {
             Text(UsageFormatting.lastUpdated(collector.snapshot.updatedAt))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatusLine: some View {
+        switch updates.status {
+        case .idle:
+            EmptyView()
+        case .checking:
+            Text("Checking for updates…")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case .upToDate:
+            Text("You’re up to date")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case let .available(version, _):
+            Text("Version \(version) is available")
+                .font(.caption)
+                .foregroundStyle(.blue)
+        case let .failed(message):
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.red)
+        }
+    }
+
+    private var checkUpdateTitle: String {
+        switch updates.status {
+        case .checking:
+            return "Checking…"
+        case let .available(version, _):
+            return "Download \(version)"
+        default:
+            return "Check Update"
+        }
+    }
+
+    private func checkOrOpenUpdate() {
+        if case .available = updates.status {
+            updates.openAvailableRelease()
+        } else {
+            Task { await updates.check(force: true) }
         }
     }
 
