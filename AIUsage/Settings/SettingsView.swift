@@ -24,7 +24,15 @@ struct SettingsView: View {
                 Button(updates.status == .checking ? "Checking…" : "Check for Updates") {
                     Task { await updates.check(force: true) }
                 }
-                .disabled(updates.status == .checking)
+                .disabled(updates.status.isBusy)
+                if case .available = updates.status {
+                    Button("Install Update") {
+                        Task { await updates.installAvailableUpdate() }
+                    }
+                    Button("Open release page") {
+                        updates.openAvailableRelease()
+                    }
+                }
             }
         }
         .formStyle(.grouped)
@@ -44,15 +52,14 @@ struct SettingsView: View {
         case .upToDate:
             Text("You’re up to date")
                 .foregroundStyle(.secondary)
-        case let .available(version, _):
-            HStack {
-                Text("\(version) is available")
-                    .foregroundStyle(.primary)
-                Spacer()
-                Button("Download") {
-                    updates.openAvailableRelease()
-                }
-            }
+        case let .available(version, _, _):
+            Text("\(version) is available")
+        case let .downloading(version):
+            Text("Downloading \(version)…")
+                .foregroundStyle(.secondary)
+        case let .installing(version):
+            Text("Installing \(version)…")
+                .foregroundStyle(.secondary)
         case let .failed(message):
             Text(message)
                 .foregroundStyle(.red)

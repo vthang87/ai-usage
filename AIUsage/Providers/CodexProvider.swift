@@ -7,7 +7,7 @@ struct CodexProvider: UsageProvider {
         }
 
         do {
-            let windows = try await Task.detached {
+            let parsed = try await Task.detached {
                 let result = try JSONRPCStdioClient.call(
                     executable: binary,
                     arguments: ["app-server", "--stdio"],
@@ -16,14 +16,18 @@ struct CodexProvider: UsageProvider {
                         "id": 1,
                     ]
                 )
-                return try CodexRateLimitsParser.windows(from: result)
+                let windows = try CodexRateLimitsParser.windows(from: result)
+                let credits = CodexRateLimitsParser.resetCredits(from: result)
+                return (windows, credits.available, credits.nextExpiresAt)
             }.value
             return ProviderUsage(
                 name: "Codex",
                 isAvailable: true,
                 isOnline: true,
-                windows: windows,
-                lastError: nil
+                windows: parsed.0,
+                lastError: nil,
+                resetCreditsAvailable: parsed.1,
+                nextResetCreditExpiresAt: parsed.2
             )
         } catch {
             return .offline(name: "Codex", message: error.localizedDescription)

@@ -94,6 +94,7 @@ private struct UsageRingSlot: Identifiable {
     let isOnline: Bool
     let showsGlyph: Bool
     let resetsAt: Date?
+    let resetCreditsAvailable: Int?
 
     var fraction: CGFloat? {
         guard let percent else { return nil }
@@ -107,6 +108,9 @@ private struct UsageRingSlot: Identifiable {
 
     var resetLabel: String {
         guard showsGlyph else { return " " }
+        if let credits = UsageFormatting.resetCredits(resetCreditsAvailable) {
+            return credits
+        }
         return UsageFormatting.reset(resetsAt)
     }
 
@@ -137,7 +141,8 @@ private struct UsageRingSlot: Identifiable {
             percent: nil,
             isOnline: false,
             showsGlyph: false,
-            resetsAt: nil
+            resetsAt: nil,
+            resetCreditsAvailable: nil
         )
     }
 
@@ -152,7 +157,8 @@ private struct UsageRingSlot: Identifiable {
                 percent: codexWindow?.usedPercent ?? snapshot.codex?.primaryPercent,
                 isOnline: snapshot.codex?.isOnline == true,
                 showsGlyph: true,
-                resetsAt: codexWindow?.resetsAt
+                resetsAt: codexWindow?.resetsAt,
+                resetCreditsAvailable: snapshot.codex?.resetCreditsAvailable
             ),
         ]
 
@@ -165,7 +171,8 @@ private struct UsageRingSlot: Identifiable {
                         percent: window.usedPercent,
                         isOnline: cursor.isOnline,
                         showsGlyph: true,
-                        resetsAt: window.resetsAt
+                        resetsAt: window.resetsAt,
+                        resetCreditsAvailable: nil
                     )
                 )
             }
@@ -177,7 +184,8 @@ private struct UsageRingSlot: Identifiable {
                     percent: snapshot.cursor?.primaryPercent,
                     isOnline: snapshot.cursor?.isOnline == true,
                     showsGlyph: true,
-                    resetsAt: snapshot.cursor?.windows.first?.resetsAt
+                    resetsAt: snapshot.cursor?.windows.first?.resetsAt,
+                    resetCreditsAvailable: nil
                 )
             )
         }

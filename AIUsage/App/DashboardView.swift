@@ -23,14 +23,10 @@ struct DashboardView: View {
                 }
                 .disabled(collector.isRefreshing)
                 .controlSize(.small)
-                Button(dashboardUpdateTitle) {
-                    if case .available = updates.status {
-                        updates.openAvailableRelease()
-                    } else {
-                        Task { await updates.check(force: true) }
-                    }
+                Button(updates.actionTitle) {
+                    updates.performAction()
                 }
-                .disabled(updates.status == .checking)
+                .disabled(updates.status.isBusy)
                 .controlSize(.small)
             }
             HStack(alignment: .top, spacing: 12) {
@@ -40,17 +36,6 @@ struct DashboardView: View {
         }
         .padding(20)
         .frame(minWidth: 520, minHeight: 280)
-    }
-
-    private var dashboardUpdateTitle: String {
-        switch updates.status {
-        case .checking:
-            return "Checking…"
-        case let .available(version, _):
-            return "Download \(version)"
-        default:
-            return "Check Update"
-        }
     }
 }
 
@@ -71,6 +56,16 @@ private struct ProviderCard: View {
                 Text(UsageFormatting.status(usage))
                     .font(.caption)
                     .foregroundStyle(usage?.isOnline == true ? Color.green : Color.secondary)
+            }
+            if let credits = UsageFormatting.resetCredits(usage?.resetCreditsAvailable) {
+                HStack {
+                    Text(credits)
+                    if let expiry = usage?.nextResetCreditExpiresAt {
+                        Text("· next expires \(UsageFormatting.reset(expiry))")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             if let usage, !usage.windows.isEmpty {
                 ForEach(usage.windows) { window in

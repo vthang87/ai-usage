@@ -22,10 +22,10 @@ struct MenuBarView: View {
                     NSApp.activate(ignoringOtherApps: true)
                     openWindow(id: "dashboard")
                 }
-                Button(checkUpdateTitle) {
-                    checkOrOpenUpdate()
+                Button(updates.actionTitle) {
+                    updates.performAction()
                 }
-                .disabled(updates.status == .checking)
+                .disabled(updates.status.isBusy)
             }
             .controlSize(.small)
             HStack {
@@ -75,33 +75,22 @@ struct MenuBarView: View {
             Text("You’re up to date")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        case let .available(version, _):
+        case let .available(version, _, _):
             Text("Version \(version) is available")
                 .font(.caption)
                 .foregroundStyle(.blue)
+        case let .downloading(version):
+            Text("Downloading \(version)…")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case let .installing(version):
+            Text("Installing \(version)…")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         case let .failed(message):
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.red)
-        }
-    }
-
-    private var checkUpdateTitle: String {
-        switch updates.status {
-        case .checking:
-            return "Checking…"
-        case let .available(version, _):
-            return "Download \(version)"
-        default:
-            return "Check Update"
-        }
-    }
-
-    private func checkOrOpenUpdate() {
-        if case .available = updates.status {
-            updates.openAvailableRelease()
-        } else {
-            Task { await updates.check(force: true) }
         }
     }
 
@@ -112,6 +101,11 @@ struct MenuBarView: View {
                 providerMark(for: title)
                 Text(title)
                     .font(.subheadline.weight(.semibold))
+                if let credits = UsageFormatting.resetCredits(usage?.resetCreditsAvailable) {
+                    Text(credits)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
                 Circle()
                     .fill(usage?.isOnline == true ? Color.green : Color.secondary.opacity(0.4))
@@ -133,6 +127,15 @@ struct MenuBarView: View {
                             .frame(minWidth: 52, alignment: .trailing)
                     }
                     .font(.callout)
+                }
+                if let expiry = usage.nextResetCreditExpiresAt, usage.resetCreditsAvailable != nil {
+                    HStack {
+                        Text("Reset credit")
+                        Spacer()
+                        Text("exp \(UsageFormatting.reset(expiry))")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
                 }
             } else if let message = usage?.lastError {
                 Text(message)

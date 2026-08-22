@@ -11,5 +11,19 @@
       "resetsAt": 1731552000
     },
     "rateLimitReachedType": null
+  },
+  "rateLimitResetCredits": {
+    "availableCount": 2,
+    "credits": [
+      {
+        "id": "credit-1",
+        "resetType": "codex_rate_limits",
+        "status": "available",
+        "grantedAt": 1730947200,
+        "expiresAt": 1733558400,
+        "title": "Full reset (Weekly + 5 hr)",
+        "description": null
+      }
+    ]
   }
 }

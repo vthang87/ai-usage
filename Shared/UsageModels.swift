@@ -22,19 +22,25 @@ public struct ProviderUsage: Codable, Sendable, Equatable {
     public var isOnline: Bool
     public var windows: [UsageWindow]
     public var lastError: String?
+    public var resetCreditsAvailable: Int?
+    public var nextResetCreditExpiresAt: Date?
 
     public init(
         name: String,
         isAvailable: Bool,
         isOnline: Bool,
         windows: [UsageWindow],
-        lastError: String?
+        lastError: String?,
+        resetCreditsAvailable: Int? = nil,
+        nextResetCreditExpiresAt: Date? = nil
     ) {
         self.name = name
         self.isAvailable = isAvailable
         self.isOnline = isOnline
         self.windows = windows
         self.lastError = lastError
+        self.resetCreditsAvailable = resetCreditsAvailable
+        self.nextResetCreditExpiresAt = nextResetCreditExpiresAt
     }
 
     public var primaryPercent: Double? {
@@ -93,7 +99,9 @@ public struct UsageSnapshot: Codable, Sendable, Equatable {
                     UsageWindow(label: "5 Hour", usedPercent: 72, quotaDescription: nil, resetsAt: Date().addingTimeInterval(3_600)),
                     UsageWindow(label: "Weekly", usedPercent: 43, quotaDescription: nil, resetsAt: Date().addingTimeInterval(259_200)),
                 ],
-                lastError: nil
+                lastError: nil,
+                resetCreditsAvailable: 2,
+                nextResetCreditExpiresAt: Date().addingTimeInterval(864_000)
             ),
             cursor: ProviderUsage(
                 name: "Cursor",
