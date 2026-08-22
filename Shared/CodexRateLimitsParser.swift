@@ -72,6 +72,20 @@ public enum CodexRateLimitsParser {
         return windows
     }
 
+    public static func resetCredits(from result: Any) -> (available: Int?, nextExpiresAt: Date?) {
+        guard let root = result as? [String: Any] else { return (nil, nil) }
+        let summary = (root["rateLimitResetCredits"] as? [String: Any])
+            ?? (root["rate_limit_reset_credits"] as? [String: Any])
+        guard let summary else { return (nil, nil) }
+
+        let available = FlexibleJSONNumber.int(from: summary["availableCount"] ?? summary["available_count"])
+        let credits = (summary["credits"] as? [[String: Any]]) ?? []
+        let expiries = credits.compactMap { credit in
+            FlexibleJSONDate.parse(credit["expiresAt"] ?? credit["expires_at"])
+        }
+        return (available, expiries.min())
+    }
+
     private static func window(from object: [String: Any]) -> UsageWindow? {
         let minutes = FlexibleJSONNumber.int(from: object["windowDurationMins"])
         let percent = FlexibleJSONNumber.double(from: object["usedPercent"])
