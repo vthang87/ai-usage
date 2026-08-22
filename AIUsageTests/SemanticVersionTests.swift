@@ -18,10 +18,15 @@ final class SemanticVersionTests: XCTestCase {
     }
 
     func testParsesGitHubLatestRelease() throws {
-        let data = Data(#"{"tag_name":"v0.0.3","html_url":"https://github.com/vthang87/ai-usage/releases/tag/v0.0.3"}"#.utf8)
+        let data = Data(#"""
+        {"tag_name":"v0.0.3","html_url":"https://github.com/vthang87/ai-usage/releases/tag/v0.0.3","assets":[{"name":"AI-Usage-0.0.3.dmg","browser_download_url":"https://github.com/vthang87/ai-usage/releases/download/v0.0.3/AI-Usage-0.0.3.dmg"}]}
+        """#.utf8)
         let release = try GitHubReleaseParser.latest(from: data)
         XCTAssertEqual(release.tagName, "v0.0.3")
         XCTAssertEqual(release.version?.string, "0.0.3")
         XCTAssertEqual(release.htmlURL.absoluteString, "https://github.com/vthang87/ai-usage/releases/tag/v0.0.3")
+        XCTAssertEqual(release.downloadURL?.lastPathComponent, "AI-Usage-0.0.3.dmg")
+        XCTAssertTrue(GitHubReleaseParser.isTrustedDownload(release.downloadURL!))
+        XCTAssertFalse(GitHubReleaseParser.isTrustedDownload(URL(string: "https://evil.example/AI-Usage.dmg")!))
     }
 }

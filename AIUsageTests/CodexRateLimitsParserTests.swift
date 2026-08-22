@@ -12,6 +12,9 @@ final class CodexRateLimitsParserTests: XCTestCase {
         XCTAssertEqual(windows[1].usedPercent, 43)
         XCTAssertEqual(windows[0].resetsAt?.timeIntervalSince1970, 1_730_947_200)
         XCTAssertEqual(windows[1].quotaDescription, "10080 min window")
+        let credits = CodexRateLimitsParser.resetCredits(from: payload)
+        XCTAssertEqual(credits.available, 2)
+        XCTAssertEqual(credits.nextExpiresAt?.timeIntervalSince1970, 1_733_558_400)
     }
 
     func testMapsWindowLabels() {

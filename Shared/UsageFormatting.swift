@@ -27,6 +27,11 @@ public enum UsageFormatting {
         return formatter.localizedString(for: date, relativeTo: Date())
     }
 
+    public static func resetCredits(_ count: Int?) -> String? {
+        guard let count else { return nil }
+        return count == 1 ? "1 reset" : "\(count) resets"
+    }
+
     public static func status(_ usage: ProviderUsage?) -> String {
         guard let usage else { return "Unknown" }
         if !usage.isAvailable { return "Unavailable" }

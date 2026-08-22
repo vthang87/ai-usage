@@ -25,6 +25,11 @@ struct ParserTestRunner {
         expect(windows[0].usedPercent == 72, "codex 5 hour percent")
         expect(windows[1].usedPercent == 43, "codex weekly percent")
         expect(windows[0].resetsAt?.timeIntervalSince1970 == 1_730_947_200, "codex reset timestamp")
+        let credits = CodexRateLimitsParser.resetCredits(from: codexJSON)
+        expect(credits.available == 2, "codex reset credits")
+        expect(credits.nextExpiresAt?.timeIntervalSince1970 == 1_733_558_400, "codex reset credit expiry")
+        expect(UsageFormatting.resetCredits(2) == "2 resets", "plural reset credits")
+        expect(UsageFormatting.resetCredits(1) == "1 reset", "singular reset credit")
         expect(CodexRateLimitsParser.label(forMinutes: 300) == "5 Hour", "label 5 hour")
         expect(CodexRateLimitsParser.label(forMinutes: 10080) == "Weekly", "label weekly")
         expect(CodexRateLimitsParser.label(forMinutes: 15) == "15 min", "label 15 min")
@@ -66,11 +71,19 @@ struct ParserTestRunner {
         expect(SemanticVersion("0.0.2-beta")?.string == "0.0.2", "strip prerelease suffix")
         expect(SemanticVersion("not-a-version") == nil, "reject invalid version")
 
-        let githubData = Data(#"{"tag_name":"v0.0.3","html_url":"https://github.com/vthang87/ai-usage/releases/tag/v0.0.3"}"#.utf8)
+        let githubData = Data(#"""
+        {"tag_name":"v0.0.3","html_url":"https://github.com/vthang87/ai-usage/releases/tag/v0.0.3","assets":[{"name":"AI-Usage-0.0.3.dmg","browser_download_url":"https://github.com/vthang87/ai-usage/releases/download/v0.0.3/AI-Usage-0.0.3.dmg"}]}
+        """#.utf8)
         let release = try GitHubReleaseParser.latest(from: githubData)
         expect(release.tagName == "v0.0.3", "github tag_name")
         expect(release.version?.string == "0.0.3", "github semantic version")
         expect(release.htmlURL.absoluteString.hasSuffix("/v0.0.3"), "github html_url")
+        expect(release.downloadURL?.lastPathComponent == "AI-Usage-0.0.3.dmg", "github dmg asset")
+        expect(GitHubReleaseParser.isTrustedDownload(release.downloadURL!), "trusted github download")
+        expect(
+            !GitHubReleaseParser.isTrustedDownload(URL(string: "https://evil.example/AI-Usage.dmg")!),
+            "reject untrusted download host"
+        )
 
         do {
             _ = try GitHubReleaseParser.latest(from: Data("{}".utf8))
