@@ -101,11 +101,6 @@ struct MenuBarView: View {
                 providerMark(for: title)
                 Text(title)
                     .font(.subheadline.weight(.semibold))
-                if let credits = UsageFormatting.resetCredits(usage?.resetCreditsAvailable) {
-                    Text(credits)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
                 Spacer()
                 Circle()
                     .fill(usage?.isOnline == true ? Color.green : Color.secondary.opacity(0.4))
@@ -114,7 +109,7 @@ struct MenuBarView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            if let usage, !usage.windows.isEmpty {
+            if let usage, !usage.windows.isEmpty || usage.resetCreditsAvailable != nil {
                 ForEach(usage.windows) { window in
                     HStack {
                         Text(window.label)
@@ -128,14 +123,17 @@ struct MenuBarView: View {
                     }
                     .font(.callout)
                 }
-                if let expiry = usage.nextResetCreditExpiresAt, usage.resetCreditsAvailable != nil {
+                if let count = usage.resetCreditsAvailable {
                     HStack {
-                        Text("Reset credit")
+                        Text("Resets")
                         Spacer()
-                        Text("exp \(UsageFormatting.reset(expiry))")
+                        Text("\(count)")
+                            .monospacedDigit()
+                        Text(usage.nextResetCreditExpiresAt.map { UsageFormatting.reset($0) } ?? "—")
                             .foregroundStyle(.secondary)
+                            .frame(minWidth: 52, alignment: .trailing)
                     }
-                    .font(.caption)
+                    .font(.callout)
                 }
             } else if let message = usage?.lastError {
                 Text(message)
