@@ -17,7 +17,8 @@ struct AIUsageApp: App {
                 .environment(AppServices.collector)
                 .environment(AppServices.updates)
         } label: {
-            MenuBarLabel(snapshot: AppServices.collector.snapshot)
+            MenuBarLabel()
+                .environment(AppServices.collector)
         }
         .menuBarExtraStyle(.window)
 
