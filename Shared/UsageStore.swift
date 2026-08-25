@@ -1,8 +1,6 @@
 import Foundation
 
 public struct UsageStore: @unchecked Sendable {
-    public static let defaultRefreshInterval: TimeInterval = 300
-
     public init() {}
 
     public func loadSnapshot() -> UsageSnapshot? {
@@ -26,21 +24,36 @@ public struct UsageStore: @unchecked Sendable {
         }
     }
 
-    public func refreshInterval() -> TimeInterval {
+    public func loadSettings() -> AppSettings {
         guard let data = try? Data(contentsOf: UsagePaths.settingsFile),
-              let settings = try? JSONDecoder().decode(Settings.self, from: data)
+              let settings = try? JSONDecoder().decode(AppSettings.self, from: data)
         else {
-            return Self.defaultRefreshInterval
+            return .default
         }
-        return settings.refreshIntervalSeconds >= 60 ? settings.refreshIntervalSeconds : Self.defaultRefreshInterval
+        var next = settings
+        if next.refreshIntervalSeconds < 60 {
+            next.refreshIntervalSeconds = AppSettings.default.refreshIntervalSeconds
+        }
+        return next
+    }
+
+    public func saveSettings(_ settings: AppSettings) {
+        let directory = UsagePaths.processSupportDirectory
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var next = settings
+        next.refreshIntervalSeconds = max(60, next.refreshIntervalSeconds)
+        guard let data = try? JSONEncoder().encode(next) else { return }
+        try? data.write(to: UsagePaths.settingsFile, options: .atomic)
+    }
+
+    public func refreshInterval() -> TimeInterval {
+        loadSettings().refreshIntervalSeconds
     }
 
     public func setRefreshInterval(_ value: TimeInterval) {
-        let directory = UsagePaths.processSupportDirectory
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let settings = Settings(refreshIntervalSeconds: max(60, value))
-        guard let data = try? JSONEncoder().encode(settings) else { return }
-        try? data.write(to: UsagePaths.settingsFile, options: .atomic)
+        var settings = loadSettings()
+        settings.refreshIntervalSeconds = max(60, value)
+        saveSettings(settings)
     }
 
     private func snapshotDirectories() -> [URL] {
@@ -61,8 +74,4 @@ public struct UsageStore: @unchecked Sendable {
         var seen = Set<String>()
         return urls.filter { seen.insert($0.standardizedFileURL.path).inserted }
     }
-}
-
-private struct Settings: Codable {
-    var refreshIntervalSeconds: TimeInterval
 }

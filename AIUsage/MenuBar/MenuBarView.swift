@@ -44,6 +44,10 @@ struct MenuBarView: View {
         }
         .padding(14)
         .frame(width: 312)
+        .onReceive(NotificationCenter.default.publisher(for: .aiUsageOpenDashboard)) { _ in
+            NSApp.activate(ignoringOtherApps: true)
+            openWindow(id: "dashboard")
+        }
     }
 
     private var header: some View {

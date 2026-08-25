@@ -9,8 +9,10 @@ final class UsageCollector {
     private(set) var snapshot: UsageSnapshot
     private(set) var isRefreshing = false
     private(set) var refreshInterval: TimeInterval
+    private(set) var settings: AppSettings
 
     private let store: UsageStore
+    private let notifier: UnusedQuotaNotifier
     private let codex: CodexProvider
     private let cursor: CursorProvider
     private var timer: Timer?
@@ -24,10 +26,13 @@ final class UsageCollector {
         cursor: CursorProvider = CursorProvider()
     ) {
         self.store = store
+        self.notifier = UnusedQuotaNotifier(store: store)
         self.codex = codex
         self.cursor = cursor
         self.snapshot = store.loadSnapshot() ?? .empty
-        self.refreshInterval = store.refreshInterval()
+        let settings = store.loadSettings()
+        self.settings = settings
+        self.refreshInterval = settings.refreshIntervalSeconds
     }
 
     func start() {
@@ -42,7 +47,10 @@ final class UsageCollector {
             reason: "Polling Codex and Cursor usage"
         )
         observeWake()
-        Task { await refresh() }
+        Task {
+            await notifier.requestAuthorizationIfNeeded()
+            await refresh()
+        }
         restartLoop()
     }
 
@@ -53,6 +61,7 @@ final class UsageCollector {
 
         async let codexUsage = collectCodex()
         async let cursorUsage = collectCursor()
+        let previous = snapshot
         let next = UsageSnapshot(
             codex: await codexUsage,
             cursor: await cursorUsage,
@@ -61,11 +70,26 @@ final class UsageCollector {
         snapshot = next
         store.saveSnapshot(next)
         WidgetCenter.shared.reloadAllTimelines()
+        await notifier.evaluate(previous: previous, current: next)
     }
 
     func setRefreshInterval(_ interval: TimeInterval) {
-        refreshInterval = max(60, interval)
-        store.setRefreshInterval(refreshInterval)
+        var next = settings
+        next.refreshIntervalSeconds = max(60, interval)
+        applySettings(next)
+    }
+
+    func updateSettings(_ next: AppSettings) {
+        applySettings(next)
+        if next.unusedQuotaAlertsEnabled || next.resetOccurredAlertsEnabled {
+            Task { await notifier.requestAuthorizationIfNeeded() }
+        }
+    }
+
+    private func applySettings(_ next: AppSettings) {
+        settings = next
+        refreshInterval = max(60, next.refreshIntervalSeconds)
+        store.saveSettings(next)
         restartLoop()
     }
 

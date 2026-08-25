@@ -35,7 +35,7 @@ enum AppInstaller {
         let folder = newApp.deletingLastPathComponent()
         let replace = folder.appendingPathComponent("replace.sh")
         let wait = folder.appendingPathComponent("install-update.sh")
-        try replaceText(destination: dest, newApp: newApp)
+        try replaceText(destination: dest, newApp: newApp, owner: NSUserName())
             .write(to: replace, atomically: true, encoding: .utf8)
         try waitText(
             destination: dest,
@@ -133,15 +133,25 @@ enum AppInstaller {
         }
     }
 
-    private static func replaceText(destination: URL, newApp: URL) -> String {
+    private static func replaceText(destination: URL, newApp: URL, owner: String) -> String {
         """
         #!/bin/bash
         set -euo pipefail
         DEST=\(shQuote(destination.path))
         NEW=\(shQuote(newApp.path))
-        rm -rf "$DEST"
-        /usr/bin/ditto "$NEW" "$DEST"
+        OWNER=\(shQuote(owner))
+
+        if [ -d "$DEST" ]; then
+          rm -rf "$DEST/Contents"
+          /usr/bin/ditto "$NEW/Contents" "$DEST/Contents"
+        else
+          /usr/bin/ditto "$NEW" "$DEST"
+        fi
         /usr/bin/xattr -cr "$DEST" || true
+
+        if [ "$(id -u)" -eq 0 ]; then
+          /usr/sbin/chown -R "$OWNER:staff" "$DEST"
+        fi
         """
     }
 
@@ -167,7 +177,7 @@ enum AppInstaller {
         fi
 
         PARENT="$(dirname "$DEST")"
-        if [ -w "$PARENT" ] && { [ ! -e "$DEST" ] || [ -w "$DEST" ]; }; then
+        if { [ -e "$DEST" ] && [ -w "$DEST" ]; } || { [ ! -e "$DEST" ] && [ -w "$PARENT" ]; }; then
           /bin/bash "$REPLACE"
         else
           /usr/bin/osascript -e "do shell script \\"/bin/bash \(replaceQ)\\" with administrator privileges"
