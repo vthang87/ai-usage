@@ -36,8 +36,9 @@ cp -R "$BUILT_APP" "$USER_APP"
 xattr -cr "$USER_APP" 2>/dev/null || true
 
 echo "==> Install to /Applications (admin password if asked)"
+OWNER="$(id -un)"
 osascript <<EOF
-do shell script "rm -rf " & quoted form of "$INSTALL_APP" & " && cp -R " & quoted form of "$BUILT_APP" & " " & quoted form of "$INSTALL_APP" & " && xattr -cr " & quoted form of "$INSTALL_APP" with administrator privileges
+do shell script "rm -rf " & quoted form of "$INSTALL_APP" & " && cp -R " & quoted form of "$BUILT_APP" & " " & quoted form of "$INSTALL_APP" & " && chown -R " & quoted form of "$OWNER:staff" & " " & quoted form of "$INSTALL_APP" & " && xattr -cr " & quoted form of "$INSTALL_APP" with administrator privileges
 EOF
 
 echo "==> Register widget"

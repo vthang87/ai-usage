@@ -8,5 +8,7 @@
 	<true/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>AI Usage notifies you before a usage window resets with unused quota left, and when a window has just reset.</string>
 </dict>
 </plist>

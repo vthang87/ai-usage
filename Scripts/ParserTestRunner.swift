@@ -30,6 +30,59 @@ struct ParserTestRunner {
         expect(credits.nextExpiresAt?.timeIntervalSince1970 == 1_733_558_400, "codex reset credit expiry")
         expect(UsageFormatting.resetCredits(2) == "2 resets", "plural reset credits")
         expect(UsageFormatting.resetCredits(1) == "1 reset", "singular reset credit")
+
+        let alertSettings = AppSettings.default
+        let weeklySoon = UsageWindow(label: "Weekly", usedPercent: 20, resetsAt: Date().addingTimeInterval(11 * 3600))
+        let weeklyFar = UsageWindow(label: "Weekly", usedPercent: 20, resetsAt: Date().addingTimeInterval(13 * 3600))
+        let fiveSoon = UsageWindow(label: "5 Hour", usedPercent: 10, quotaDescription: "300 min window", resetsAt: Date().addingTimeInterval(90 * 60))
+        let fiveFar = UsageWindow(label: "5 Hour", usedPercent: 10, quotaDescription: "300 min window", resetsAt: Date().addingTimeInterval(3 * 3600))
+        let mostlyUsed = UsageWindow(label: "Weekly", usedPercent: 40, resetsAt: Date().addingTimeInterval(2 * 3600))
+        expect(UnusedQuotaAlertPolicy.shouldNotify(window: weeklySoon, settings: alertSettings), "weekly unused near reset")
+        expect(!UnusedQuotaAlertPolicy.shouldNotify(window: weeklyFar, settings: alertSettings), "weekly reset still far")
+        expect(UnusedQuotaAlertPolicy.shouldNotify(window: fiveSoon, settings: alertSettings), "5 hour unused in last 2h")
+        expect(!UnusedQuotaAlertPolicy.shouldNotify(window: fiveFar, settings: alertSettings), "5 hour reset farther than 2h")
+        expect(!UnusedQuotaAlertPolicy.shouldNotify(window: mostlyUsed, settings: alertSettings), "skip when unused below 70%")
+
+        let previousWeekly = UsageWindow(label: "Weekly", usedPercent: 80, resetsAt: Date().addingTimeInterval(-60))
+        let currentWeekly = UsageWindow(label: "Weekly", usedPercent: 2, resetsAt: Date().addingTimeInterval(7 * 24 * 3600))
+        expect(UnusedQuotaAlertPolicy.didReset(previous: previousWeekly, current: currentWeekly), "detect window reset")
+        expect(!UnusedQuotaAlertPolicy.didReset(previous: currentWeekly, current: currentWeekly), "same window is not a reset")
+        expect(
+            UnusedQuotaAlertPolicy.resetCandidates(
+                previous: .empty,
+                current: .placeholder,
+                settings: alertSettings
+            ).isEmpty,
+            "skip reset alerts on first snapshot"
+        )
+        let previousSnap = UsageSnapshot(
+            codex: ProviderUsage(
+                name: "Codex",
+                isAvailable: true,
+                isOnline: true,
+                windows: [previousWeekly],
+                lastError: nil
+            ),
+            cursor: nil,
+            updatedAt: Date().addingTimeInterval(-300)
+        )
+        let currentSnap = UsageSnapshot(
+            codex: ProviderUsage(
+                name: "Codex",
+                isAvailable: true,
+                isOnline: true,
+                windows: [currentWeekly],
+                lastError: nil
+            ),
+            cursor: nil,
+            updatedAt: Date()
+        )
+        let resetFound = UnusedQuotaAlertPolicy.resetCandidates(
+            previous: previousSnap,
+            current: currentSnap,
+            settings: alertSettings
+        )
+        expect(resetFound.count == 1 && resetFound.first?.window == "Weekly", "reset candidate for new cycle")
         expect(CodexRateLimitsParser.label(forMinutes: 300) == "5 Hour", "label 5 hour")
         expect(CodexRateLimitsParser.label(forMinutes: 10080) == "Weekly", "label weekly")
         expect(CodexRateLimitsParser.label(forMinutes: 15) == "15 min", "label 15 min")

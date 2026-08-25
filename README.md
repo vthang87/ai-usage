@@ -24,7 +24,7 @@ Refresh is automatic (default **5 minutes**, 1–15 in Settings), at launch, aft
 3. First launch: **right-click → Open** (ad-hoc signed, not notarized). Gatekeeper will warn once.
 4. Leave it running in the menu bar.
 
-Later versions: use **Install** in the menu bar (or Settings). The app downloads the release DMG, replaces itself, and relaunches. Installing into `/Applications` may ask for an admin password. First launch of an ad-hoc build can still need **right-click → Open**.
+Later versions: use **Install** in the menu bar (or Settings). The app downloads the release DMG, replaces itself, and relaunches. The first copy into `/Applications` may ask for an admin password; later in-app updates should not. First launch of an ad-hoc build can still need **right-click → Open**.
 
 ### Widgets
 
@@ -87,4 +87,4 @@ Manual run (build only, no GitHub Release): **Actions → Release → Run workfl
 
 ## Out of scope (for now)
 
-Notifications, history, charts, and other tools (Claude, Gemini, Copilot).
+History, charts, and other tools (Claude, Gemini, Copilot).
