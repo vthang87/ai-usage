@@ -59,6 +59,7 @@
 		C8EA30D4703311383D8A31FA /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6611B56BB4E776ED930B7D /* UpdateChecker.swift */; };
 		C9CBD687946BF13CCA23688C /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5EDA25AE307B5CF12A39078 /* DashboardView.swift */; };
 		CA05D656212201A02B94A0D5 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF3DA9DCE7226FD7816ABA7 /* AppSettings.swift */; };
+		CDB588826075823EBA44E689 /* LoginItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC87094EBE0FE5F722AA145 /* LoginItemController.swift */; };
 		CE796CC8E0C36DB9B2213441 /* GitHubReleaseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF15351BC8C2FFAC022AF53 /* GitHubReleaseParser.swift */; };
 		CF41A2EFC1683B8FAEC91F1B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07C1AAB2DBA28B026A0CEEA /* SettingsView.swift */; };
 		D45FE27948019F26AB8477E5 /* UsageFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A40B5B699EBE3FB14A69A96 /* UsageFormatting.swift */; };
@@ -127,6 +128,7 @@
 		734EE483952B42024FD00CCB /* MenuBarLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarLabel.swift; sourceTree = "<group>"; };
 		8C44978B5D9F93608DC13E0E /* UsageCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageCollector.swift; sourceTree = "<group>"; };
 		9953D1A95F36056D5EE7130F /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		9CC87094EBE0FE5F722AA145 /* LoginItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemController.swift; sourceTree = "<group>"; };
 		A0526A64251FD0B737A0BC6E /* UnusedQuotaAlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnusedQuotaAlertPolicy.swift; sourceTree = "<group>"; };
 		A3DB2DBDB41BA082C5FB373A /* AIUsageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageApp.swift; sourceTree = "<group>"; };
 		AAFE7C9EC89E91B894B8B94E /* cursor-usage.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "cursor-usage.json"; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 				2E05E4AA9D8CC6FD3A5974EC /* CollectorError.swift */,
 				DD686B7E332039C5FE8BA06B /* CursorAccessToken.swift */,
 				12B03B901C5217A9DF7CB6DD /* JSONRPCStdioClient.swift */,
+				9CC87094EBE0FE5F722AA145 /* LoginItemController.swift */,
 				F8B45A6203DC38A195C50F41 /* ProcessCapture.swift */,
 				03E78772AC2B7DC28635234C /* UnusedQuotaNotifier.swift */,
 				6D6611B56BB4E776ED930B7D /* UpdateChecker.swift */,
@@ -497,6 +500,7 @@
 				C9CBD687946BF13CCA23688C /* DashboardView.swift in Sources */,
 				CE796CC8E0C36DB9B2213441 /* GitHubReleaseParser.swift in Sources */,
 				3E5AD74335F8A3A4F4339F70 /* JSONRPCStdioClient.swift in Sources */,
+				CDB588826075823EBA44E689 /* LoginItemController.swift in Sources */,
 				F4F275CB8B0A1C30A9FEDD9C /* MenuBarLabel.swift in Sources */,
 				85FC9191BCDAEEE5A88A11B6 /* MenuBarView.swift in Sources */,
 				4DDCC79BDD9EB544CF9B3735 /* ProcessCapture.swift in Sources */,
@@ -604,7 +608,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -618,7 +622,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.3.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -734,7 +738,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -754,7 +758,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.3.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

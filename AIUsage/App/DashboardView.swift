@@ -30,8 +30,16 @@ struct DashboardView: View {
                 .controlSize(.small)
             }
             HStack(alignment: .top, spacing: 12) {
-                ProviderCard(usage: collector.snapshot.codex, fallbackName: "Codex")
-                ProviderCard(usage: collector.snapshot.cursor, fallbackName: "Cursor")
+                ProviderCard(
+                    usage: collector.snapshot.codex,
+                    fallbackName: "Codex",
+                    showExactResetDateTime: collector.settings.showExactResetDateTime
+                )
+                ProviderCard(
+                    usage: collector.snapshot.cursor,
+                    fallbackName: "Cursor",
+                    showExactResetDateTime: collector.settings.showExactResetDateTime
+                )
             }
         }
         .padding(20)
@@ -42,6 +50,7 @@ struct DashboardView: View {
 private struct ProviderCard: View {
     let usage: ProviderUsage?
     let fallbackName: String
+    let showExactResetDateTime: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -61,7 +70,7 @@ private struct ProviderCard: View {
                 HStack {
                     Text(credits)
                     if let expiry = usage?.nextResetCreditExpiresAt {
-                        Text("· next expires \(UsageFormatting.reset(expiry))")
+                        Text("· next expires \(UsageFormatting.reset(expiry, exact: showExactResetDateTime))")
                     }
                 }
                 .font(.caption)
@@ -82,7 +91,7 @@ private struct ProviderCard: View {
                                 Text(quota)
                             }
                             Spacer()
-                            Text("Reset \(UsageFormatting.reset(window.resetsAt))")
+                            Text("Reset \(UsageFormatting.reset(window.resetsAt, exact: showExactResetDateTime))")
                         }
                         .font(.caption)
                         .foregroundStyle(.secondary)

@@ -1,5 +1,5 @@
 ---
-description: Quy trình release AI Usage (PR → hỏi version → GitHub Release)
+description: Quy trình release AI Usage (PR → hỏi version → GitHub Release + release notes đầy đủ)
 alwaysApply: true
 ---
 
@@ -25,10 +25,27 @@ Khi user yêu cầu release / ship / tag / publish (vd. `pr to main -> release`,
    - Tag `v<version>` phải khớp `MARKETING_VERSION` (vd. `0.3.4` ↔ `v0.3.4`).
    - `git tag v<version> && git push origin v<version>`.
    - CI `.github/workflows/release.yml` build DMG và gắn vào GitHub Release — theo dõi `gh run watch` tới khi xong.
+   - **Cập nhật release notes đầy đủ** (xem mục dưới) — không để notes chỉ còn boilerplate Install/Notes.
    - Trả về URL PR, release, và DMG.
+
+## Release notes — bắt buộc đầy đủ
+
+Sau khi GitHub Release được tạo (CI thường dùng body boilerplate + `generate_release_notes`):
+
+1. Lấy diff commits **từ tag trước → tag mới** (`git log v<prev>..v<version> --oneline`, PR merged, và `gh release view` nếu cần).
+2. Viết notes **đầy đủ** theo nhóm, cover **mọi thay đổi user-facing** trong release (không bỏ sót feature / fix / setting / behavior):
+   - **What's new** — tính năng mới
+   - **Improvements** — UX / performance / polish
+   - **Fixes** — bug đã sửa
+   - Giữ phần **Install** + SHA-256 / ad-hoc signed nếu CI đã có; không xóa thông tin cài đặt.
+3. Cập nhật body release bằng `gh release edit v<version> --notes "$(cat <<'EOF' … EOF)"`.
+4. Notes phải cụ thể (vd. “Toggle Exact reset date & time”, “Settings window comes to front”), không generic (“bug fixes and improvements”).
+5. Nếu release chỉ có thay đổi nội bộ (build/CI), ghi rõ **Internal** thay vì bịa feature.
 
 ## Không làm
 
 - Không tự chọn version khác mặc định patch nếu user chưa nói.
 - Không push tag trước khi PR đã merge vào `main`.
 - Không tạo release thủ công bằng `gh release create` nếu CI tag workflow đang lo phần đó (trừ khi CI fail và user nhờ làm tay).
+- Không bỏ qua bước cập nhật release notes sau khi CI xong.
+- Không để notes chỉ còn template Install/Notes hoặc auto-generated commit list mà không tóm tắt đủ thay đổi.

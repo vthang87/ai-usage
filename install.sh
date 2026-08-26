@@ -29,11 +29,11 @@ killall "$APP_NAME" 2>/dev/null || true
 killall AIUsageWidget 2>/dev/null || true
 sleep 1
 
-echo "==> Install to ~/Applications"
-mkdir -p "$HOME/Applications"
-rm -rf "$USER_APP"
-cp -R "$BUILT_APP" "$USER_APP"
-xattr -cr "$USER_APP" 2>/dev/null || true
+# Keep a single install in /Applications so Apps/Launchpad don't list duplicates.
+if [ -d "$USER_APP" ]; then
+  echo "==> Remove leftover ~/Applications copy"
+  rm -rf "$USER_APP"
+fi
 
 echo "==> Install to /Applications (admin password if asked)"
 OWNER="$(id -un)"

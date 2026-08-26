@@ -14,7 +14,17 @@ struct SettingsView: View {
                     Text("10 minutes").tag(TimeInterval(600))
                     Text("15 minutes").tag(TimeInterval(900))
                 }
-                Text("Refreshes automatically on a timer, at launch, after wake, and when you press Refresh.")
+                Toggle("Open at login", isOn: launchAtLoginBinding)
+                if LoginItemController.needsApproval {
+                    Text("Allow AI Usage in System Settings → General → Login Items.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+                Toggle("Exact reset date & time", isOn: exactResetBinding)
+                Text("Off shows time remaining (2d 5h). On shows the reset date and time.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Refreshes automatically on a timer, at launch, after wake, and when you press Refresh. Open at login keeps the menu bar collector running after you sign in.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -98,6 +108,14 @@ struct SettingsView: View {
             get: { collector.refreshInterval },
             set: { collector.setRefreshInterval($0) }
         )
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        setting(\.launchAtLoginEnabled)
+    }
+
+    private var exactResetBinding: Binding<Bool> {
+        setting(\.showExactResetDateTime)
     }
 
     private var alertsEnabledBinding: Binding<Bool> {

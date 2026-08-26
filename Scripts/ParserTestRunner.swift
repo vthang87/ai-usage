@@ -189,6 +189,25 @@ struct ParserTestRunner {
             UsageFormatting.status(.unavailable(name: "Codex", message: "missing")) == "Unavailable",
             "unavailable status"
         )
+        let now = Date()
+        expect(UsageFormatting.reset(nil) == "—", "missing reset")
+        expect(UsageFormatting.reset(now.addingTimeInterval(-60), now: now) == "soon", "reset soon")
+        expect(UsageFormatting.reset(now.addingTimeInterval(26 * 3600), now: now) == "1d 2h", "reset remaining days")
+        var calendar = Calendar(identifier: .gregorian)
+        let utc = TimeZone(identifier: "UTC")!
+        calendar.timeZone = utc
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 8, day: 26, hour: 10, minute: 0))!
+        let afternoon = calendar.date(from: DateComponents(year: 2026, month: 8, day: 26, hour: 14, minute: 32))!
+        expect(
+            UsageFormatting.reset(
+                afternoon,
+                exact: true,
+                now: morning,
+                locale: Locale(identifier: "en_GB"),
+                timeZone: utc
+            ) == "26 Aug at 14:32",
+            "exact reset datetime"
+        )
 
         expect(SemanticVersion("v0.0.2") == SemanticVersion("0.0.2"), "strip v prefix")
         expect(SemanticVersion("0.0.3")! > SemanticVersion("0.0.2")!, "patch bump is newer")

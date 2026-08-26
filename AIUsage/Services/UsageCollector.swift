@@ -47,6 +47,8 @@ final class UsageCollector {
             reason: "Polling Codex and Cursor usage"
         )
         observeWake()
+        _ = LoginItemController.apply(enabled: settings.launchAtLoginEnabled)
+        store.saveSettings(settings)
         Task {
             await notifier.requestAuthorizationIfNeeded()
             await refresh()
@@ -81,6 +83,7 @@ final class UsageCollector {
 
     func updateSettings(_ next: AppSettings) {
         applySettings(next)
+        _ = LoginItemController.apply(enabled: next.launchAtLoginEnabled)
         if next.unusedQuotaAlertsEnabled || next.resetOccurredAlertsEnabled {
             Task { await notifier.requestAuthorizationIfNeeded() }
         }
@@ -90,6 +93,7 @@ final class UsageCollector {
         settings = next
         refreshInterval = max(60, next.refreshIntervalSeconds)
         store.saveSettings(next)
+        WidgetCenter.shared.reloadAllTimelines()
         restartLoop()
     }
 

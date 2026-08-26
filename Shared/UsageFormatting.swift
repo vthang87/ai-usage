@@ -6,11 +6,25 @@ public enum UsageFormatting {
         return "\(Int(value.rounded()))%"
     }
 
-    public static func reset(_ date: Date?) -> String {
+    public static func reset(
+        _ date: Date?,
+        exact: Bool = false,
+        now: Date = Date(),
+        locale: Locale = .current,
+        timeZone: TimeZone = .current
+    ) -> String {
         guard let date else { return "—" }
-        let remaining = date.timeIntervalSinceNow
-        if remaining <= 0 { return "soon" }
-        let minutes = Int(remaining / 60)
+        if date.timeIntervalSince(now) <= 0 { return "soon" }
+        if exact {
+            return date.formatted(
+                Date.FormatStyle(locale: locale, timeZone: timeZone)
+                    .day()
+                    .month(.abbreviated)
+                    .hour()
+                    .minute()
+            )
+        }
+        let minutes = Int(date.timeIntervalSince(now) / 60)
         if minutes >= 1_440 {
             return "\(minutes / 1_440)d \((minutes % 1_440) / 60)h"
         }

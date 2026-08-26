@@ -6,7 +6,7 @@ struct AIUsageSmallWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: UsageTimelineProvider()) { entry in
-            SmallWidgetView(snapshot: entry.snapshot)
+            SmallWidgetView(snapshot: entry.snapshot, showExactResetDateTime: entry.showExactResetDateTime)
                 .containerBackground(for: .widget) {
                     Color.black.opacity(0.28)
                 }
@@ -22,7 +22,7 @@ struct AIUsageMediumWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: UsageTimelineProvider()) { entry in
-            MediumWidgetView(snapshot: entry.snapshot)
+            MediumWidgetView(snapshot: entry.snapshot, showExactResetDateTime: entry.showExactResetDateTime)
                 .containerBackground(for: .widget) {
                     Color.black.opacity(0.28)
                 }
