@@ -48,7 +48,7 @@ struct MenuBarView: View {
             .controlSize(.small)
         }
         .padding(14)
-        .frame(width: 312)
+        .frame(width: popoverWidth)
         .onReceive(NotificationCenter.default.publisher(for: .aiUsageOpenDashboard)) { _ in
             NSApp.activate(ignoringOtherApps: true)
             openWindow(id: "dashboard")
@@ -128,6 +128,8 @@ struct MenuBarView: View {
                             .foregroundStyle(percentColor(window.usedPercent))
                         Text(UsageFormatting.reset(window.resetsAt, exact: collector.settings.showExactResetDateTime))
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                             .frame(minWidth: resetColumnWidth, alignment: .trailing)
                     }
                     .font(.callout)
@@ -140,6 +142,8 @@ struct MenuBarView: View {
                             .monospacedDigit()
                         Text(usage.nextResetCreditExpiresAt.map { UsageFormatting.reset($0, exact: collector.settings.showExactResetDateTime) } ?? "—")
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                             .frame(minWidth: resetColumnWidth, alignment: .trailing)
                     }
                     .font(.callout)
@@ -170,7 +174,11 @@ struct MenuBarView: View {
         return .primary
     }
 
+    private var popoverWidth: CGFloat {
+        collector.settings.showExactResetDateTime ? 388 : 312
+    }
+
     private var resetColumnWidth: CGFloat {
-        collector.settings.showExactResetDateTime ? 88 : 52
+        collector.settings.showExactResetDateTime ? 120 : 52
     }
 }
