@@ -37,7 +37,7 @@ final class UnusedQuotaNotifier: NSObject, UNUserNotificationCenterDelegate {
             let unused = UnusedQuotaAlertPolicy.candidates(in: current, now: now, settings: settings)
                 .filter { !settings.notifiedAlertKeys.contains($0.key) }
             for candidate in unused {
-                await deliverUnused(candidate)
+                await deliverUnused(candidate, exact: settings.showExactResetDateTime)
                 freshKeys.append(candidate.key)
             }
         }
@@ -57,12 +57,13 @@ final class UnusedQuotaNotifier: NSObject, UNUserNotificationCenterDelegate {
         store.saveSettings(settings)
     }
 
-    private func deliverUnused(_ candidate: UnusedQuotaAlertPolicy.AlertCandidate) async {
+    private func deliverUnused(_ candidate: UnusedQuotaAlertPolicy.AlertCandidate, exact: Bool) async {
         let remaining = Int(candidate.remainingPercent.rounded())
-        let until = UsageFormatting.reset(candidate.resetsAt)
+        let until = UsageFormatting.reset(candidate.resetsAt, exact: exact)
+        let phrase = exact && until != "soon" ? "Resets at \(until)" : "Resets in \(until)"
         let content = UNMutableNotificationContent()
         content.title = "\(candidate.provider) \(candidate.window) resets soon"
-        content.body = "\(remaining)% unused. Resets in \(until)."
+        content.body = "\(remaining)% unused. \(phrase)."
         content.sound = .default
         try? await center.add(UNNotificationRequest(identifier: candidate.key, content: content, trigger: nil))
     }

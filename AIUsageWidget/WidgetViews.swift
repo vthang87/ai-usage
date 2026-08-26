@@ -3,17 +3,27 @@ import WidgetKit
 
 struct SmallWidgetView: View {
     let snapshot: UsageSnapshot
+    var showExactResetDateTime = false
 
     var body: some View {
-        UsageRingRow(slots: UsageRingSlot.slots(from: snapshot, capacity: 2), ringSize: 54, lineWidth: 5)
+        UsageRingRow(
+            slots: UsageRingSlot.slots(from: snapshot, capacity: 2, showExactResetDateTime: showExactResetDateTime),
+            ringSize: 54,
+            lineWidth: 5
+        )
     }
 }
 
 struct MediumWidgetView: View {
     let snapshot: UsageSnapshot
+    var showExactResetDateTime = false
 
     var body: some View {
-        UsageRingRow(slots: UsageRingSlot.slots(from: snapshot, capacity: 4), ringSize: 48, lineWidth: 4.5)
+        UsageRingRow(
+            slots: UsageRingSlot.slots(from: snapshot, capacity: 4, showExactResetDateTime: showExactResetDateTime),
+            ringSize: 48,
+            lineWidth: 4.5
+        )
     }
 }
 
@@ -75,6 +85,8 @@ private struct UsageRingCell: View {
             Text(slot.resetLabel)
                 .font(.system(size: 10, weight: .regular))
                 .monospacedDigit()
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
                 .foregroundStyle(Color.secondary.opacity(slot.showsGlyph ? 0.85 : 0))
                 .frame(height: 12)
         }
@@ -94,6 +106,7 @@ private struct UsageRingSlot: Identifiable {
     let isOnline: Bool
     let showsGlyph: Bool
     let resetsAt: Date?
+    let showExactResetDateTime: Bool
 
     var fraction: CGFloat? {
         guard let percent else { return nil }
@@ -107,7 +120,7 @@ private struct UsageRingSlot: Identifiable {
 
     var resetLabel: String {
         guard showsGlyph else { return " " }
-        return UsageFormatting.reset(resetsAt)
+        return UsageFormatting.reset(resetsAt, exact: showExactResetDateTime)
     }
 
     var ringColor: Color {
@@ -136,11 +149,12 @@ private struct UsageRingSlot: Identifiable {
             percent: nil,
             isOnline: false,
             showsGlyph: false,
-            resetsAt: nil
+            resetsAt: nil,
+            showExactResetDateTime: false
         )
     }
 
-    static func slots(from snapshot: UsageSnapshot, capacity: Int) -> [UsageRingSlot] {
+    static func slots(from snapshot: UsageSnapshot, capacity: Int, showExactResetDateTime: Bool = false) -> [UsageRingSlot] {
         var items = WidgetRingLayout.items(from: snapshot, capacity: capacity).map { item in
             UsageRingSlot(
                 id: item.id,
@@ -148,7 +162,8 @@ private struct UsageRingSlot: Identifiable {
                 percent: item.percent,
                 isOnline: item.isOnline,
                 showsGlyph: true,
-                resetsAt: item.resetsAt
+                resetsAt: item.resetsAt,
+                showExactResetDateTime: showExactResetDateTime
             )
         }
         while items.count < capacity {

@@ -35,7 +35,44 @@ struct AIUsageApp: App {
             SettingsView()
                 .environment(AppServices.collector)
                 .environment(AppServices.updates)
+                .onAppear {
+                    NSApp.activate(ignoringOtherApps: true)
+                    AppWindowFocus.bringSettingsToFront()
+                }
         }
+    }
+}
+
+@MainActor
+enum AppWindowFocus {
+    static func bringSettingsToFront() {
+        NSApp.activate(ignoringOtherApps: true)
+        orderSettingsFront()
+        // Settings window is created asynchronously the first time.
+        DispatchQueue.main.async {
+            orderSettingsFront()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            orderSettingsFront()
+        }
+    }
+
+    private static func orderSettingsFront() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.windows.filter(isSettingsWindow).forEach(orderFront)
+    }
+
+    private static func isSettingsWindow(_ window: NSWindow) -> Bool {
+        if window.frameAutosaveName.contains("Settings") { return true }
+        if window.identifier?.rawValue.localizedCaseInsensitiveContains("settings") == true { return true }
+        if window.title.localizedCaseInsensitiveContains("settings") { return true }
+        return false
+    }
+
+    private static func orderFront(_ window: NSWindow) {
+        window.collectionBehavior.insert([.moveToActiveSpace, .fullScreenAuxiliary])
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
     }
 }
 

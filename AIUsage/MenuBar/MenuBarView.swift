@@ -5,6 +5,7 @@ struct MenuBarView: View {
     @Environment(UsageCollector.self) private var collector
     @Environment(UpdateChecker.self) private var updates
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -29,8 +30,12 @@ struct MenuBarView: View {
             }
             .controlSize(.small)
             HStack {
-                SettingsLink {
-                    Text("Settings…")
+                Button("Settings…") {
+                    NSApp.activate(ignoringOtherApps: true)
+                    openSettings()
+                    DispatchQueue.main.async {
+                        AppWindowFocus.bringSettingsToFront()
+                    }
                 }
                 Spacer()
                 Text("v\(AppVersion.marketing)")
@@ -121,9 +126,9 @@ struct MenuBarView: View {
                         Text(UsageFormatting.percent(window.usedPercent))
                             .monospacedDigit()
                             .foregroundStyle(percentColor(window.usedPercent))
-                        Text(UsageFormatting.reset(window.resetsAt))
+                        Text(UsageFormatting.reset(window.resetsAt, exact: collector.settings.showExactResetDateTime))
                             .foregroundStyle(.secondary)
-                            .frame(minWidth: 52, alignment: .trailing)
+                            .frame(minWidth: resetColumnWidth, alignment: .trailing)
                     }
                     .font(.callout)
                 }
@@ -133,9 +138,9 @@ struct MenuBarView: View {
                         Spacer()
                         Text("\(count)")
                             .monospacedDigit()
-                        Text(usage.nextResetCreditExpiresAt.map { UsageFormatting.reset($0) } ?? "—")
+                        Text(usage.nextResetCreditExpiresAt.map { UsageFormatting.reset($0, exact: collector.settings.showExactResetDateTime) } ?? "—")
                             .foregroundStyle(.secondary)
-                            .frame(minWidth: 52, alignment: .trailing)
+                            .frame(minWidth: resetColumnWidth, alignment: .trailing)
                     }
                     .font(.callout)
                 }
@@ -163,5 +168,9 @@ struct MenuBarView: View {
         if value >= 90 { return .red }
         if value >= 70 { return .orange }
         return .primary
+    }
+
+    private var resetColumnWidth: CGFloat {
+        collector.settings.showExactResetDateTime ? 88 : 52
     }
 }

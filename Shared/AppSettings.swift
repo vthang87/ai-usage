@@ -8,6 +8,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var fiveHourResetLeadHours: Double
     public var notifiedAlertKeys: [String]
     public var resetOccurredAlertsEnabled: Bool
+    public var launchAtLoginEnabled: Bool
+    public var showExactResetDateTime: Bool
 
     public static let `default` = AppSettings(
         refreshIntervalSeconds: 300,
@@ -16,7 +18,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         defaultResetLeadHours: 12,
         fiveHourResetLeadHours: 2,
         notifiedAlertKeys: [],
-        resetOccurredAlertsEnabled: true
+        resetOccurredAlertsEnabled: true,
+        launchAtLoginEnabled: true,
+        showExactResetDateTime: false
     )
 
     public init(
@@ -26,7 +30,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         defaultResetLeadHours: Double,
         fiveHourResetLeadHours: Double,
         notifiedAlertKeys: [String],
-        resetOccurredAlertsEnabled: Bool
+        resetOccurredAlertsEnabled: Bool,
+        launchAtLoginEnabled: Bool,
+        showExactResetDateTime: Bool
     ) {
         self.refreshIntervalSeconds = refreshIntervalSeconds
         self.unusedQuotaAlertsEnabled = unusedQuotaAlertsEnabled
@@ -35,6 +41,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.fiveHourResetLeadHours = fiveHourResetLeadHours
         self.notifiedAlertKeys = notifiedAlertKeys
         self.resetOccurredAlertsEnabled = resetOccurredAlertsEnabled
+        self.launchAtLoginEnabled = launchAtLoginEnabled
+        self.showExactResetDateTime = showExactResetDateTime
     }
 
     public init(from decoder: Decoder) throws {
@@ -54,5 +62,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
             ?? defaults.notifiedAlertKeys
         resetOccurredAlertsEnabled = try container.decodeIfPresent(Bool.self, forKey: .resetOccurredAlertsEnabled)
             ?? defaults.resetOccurredAlertsEnabled
+        launchAtLoginEnabled = try container.decodeIfPresent(Bool.self, forKey: .launchAtLoginEnabled)
+            ?? defaults.launchAtLoginEnabled
+        showExactResetDateTime = try container.decodeIfPresent(Bool.self, forKey: .showExactResetDateTime)
+            ?? defaults.showExactResetDateTime
     }
 }

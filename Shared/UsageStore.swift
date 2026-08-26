@@ -38,12 +38,16 @@ public struct UsageStore: @unchecked Sendable {
     }
 
     public func saveSettings(_ settings: AppSettings) {
-        let directory = UsagePaths.processSupportDirectory
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         var next = settings
         next.refreshIntervalSeconds = max(60, next.refreshIntervalSeconds)
         guard let data = try? JSONEncoder().encode(next) else { return }
-        try? data.write(to: UsagePaths.settingsFile, options: .atomic)
+        for directory in snapshotDirectories() {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try? data.write(
+                to: directory.appendingPathComponent("settings.json"),
+                options: .atomic
+            )
+        }
     }
 
     public func refreshInterval() -> TimeInterval {

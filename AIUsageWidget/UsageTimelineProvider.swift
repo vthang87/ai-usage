@@ -4,6 +4,7 @@ import SwiftUI
 struct UsageEntry: TimelineEntry {
     let date: Date
     let snapshot: UsageSnapshot
+    var showExactResetDateTime = false
 }
 
 struct UsageTimelineProvider: TimelineProvider {
@@ -25,6 +26,11 @@ struct UsageTimelineProvider: TimelineProvider {
     }
 
     private func currentEntry() -> UsageEntry {
-        UsageEntry(date: Date(), snapshot: UsageStore().loadSnapshot() ?? .empty)
+        let store = UsageStore()
+        return UsageEntry(
+            date: Date(),
+            snapshot: store.loadSnapshot() ?? .empty,
+            showExactResetDateTime: store.loadSettings().showExactResetDateTime
+        )
     }
 }
