@@ -37,15 +37,37 @@ public enum UnusedQuotaAlertPolicy {
         return "\(prefix)|\(provider)|\(window.label)|\(stamp)"
     }
 
-    public static func didReset(previous: UsageWindow, current: UsageWindow) -> Bool {
+    /// True when a usage window finished its cycle and Codex/Cursor opened a new one.
+    /// Mid-cycle `resetsAt` jitter (Codex often slides the timestamp each poll) must not count.
+    public static func didReset(previous: UsageWindow, current: UsageWindow, now: Date = Date()) -> Bool {
         guard let previousReset = previous.resetsAt, let currentReset = current.resetsAt else { return false }
-        return currentReset.timeIntervalSince(previousReset) >= 60
+        // Previous cycle should already be due (or nearly due). Otherwise we're still mid-window.
+        let dueGrace: TimeInterval = 15 * 60
+        guard previousReset <= now.addingTimeInterval(dueGrace) else { return false }
+        return currentReset.timeIntervalSince(previousReset) >= minimumResetAdvance(for: previous)
+    }
+
+    public static func minimumResetAdvance(for window: UsageWindow) -> TimeInterval {
+        if isFiveHourWindow(window) { return 90 * 60 }
+        if window.label == "Weekly" { return 12 * 3600 }
+        if let minutes = windowMinutes(window) {
+            return max(TimeInterval(minutes * 60) / 2, 30 * 60)
+        }
+        return 60 * 60
+    }
+
+    private static func windowMinutes(_ window: UsageWindow) -> Int? {
+        guard let description = window.quotaDescription else { return nil }
+        let parts = description.split(separator: " ")
+        guard let first = parts.first, let minutes = Int(first) else { return nil }
+        return minutes
     }
 
     public static func resetCandidates(
         previous: UsageSnapshot,
         current: UsageSnapshot,
-        settings: AppSettings
+        settings: AppSettings,
+        now: Date = Date()
     ) -> [ResetCandidate] {
         guard settings.resetOccurredAlertsEnabled, previous.updatedAt != .distantPast else { return [] }
         var items: [ResetCandidate] = []
@@ -57,7 +79,7 @@ public enum UnusedQuotaAlertPolicy {
             let previousWindows = Dictionary(uniqueKeysWithValues: previousUsage.windows.map { ($0.label, $0) })
             for window in currentUsage.windows {
                 guard let last = previousWindows[window.label],
-                      didReset(previous: last, current: window),
+                      didReset(previous: last, current: window, now: now),
                       let key = notificationKey(provider: name, window: window, prefix: "reset")
                 else { continue }
                 items.append(

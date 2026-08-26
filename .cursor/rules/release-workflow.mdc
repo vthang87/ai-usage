@@ -1,0 +1,34 @@
+---
+description: Quy trình release AI Usage (PR → hỏi version → GitHub Release)
+alwaysApply: true
+---
+
+# Release workflow
+
+Khi user yêu cầu release / ship / tag / publish (vd. `pr to main -> release`, `release 0.x.y`):
+
+## Bắt buộc hỏi version trước
+
+1. Đọc `MARKETING_VERSION` hiện tại trong `project.yml`.
+2. Đề xuất mặc định: **patch +0.0.1** (vd. `0.3.3` → `0.3.4`).
+3. Hỏi user xác nhận version trước khi bump / commit / PR / tag.
+4. Chỉ bỏ qua hỏi nếu user đã ghi rõ version trong lệnh (vd. `release 0.3.4`).
+
+## Thứ tự thực hiện
+
+1. **PR → `main`**
+   - Branch `release/<version>` từ `main` mới nhất.
+   - Bump `MARKETING_VERSION` + `CURRENT_PROJECT_VERSION` trong `project.yml`, sync `xcodegen generate`, cập nhật version string trong `JSONRPCStdioClient` nếu có.
+   - Commit, push, `gh pr create` vào `main`.
+   - Merge PR (`gh pr merge --merge`), checkout `main`, `git pull`.
+2. **Tạo release trên GitHub**
+   - Tag `v<version>` phải khớp `MARKETING_VERSION` (vd. `0.3.4` ↔ `v0.3.4`).
+   - `git tag v<version> && git push origin v<version>`.
+   - CI `.github/workflows/release.yml` build DMG và gắn vào GitHub Release — theo dõi `gh run watch` tới khi xong.
+   - Trả về URL PR, release, và DMG.
+
+## Không làm
+
+- Không tự chọn version khác mặc định patch nếu user chưa nói.
+- Không push tag trước khi PR đã merge vào `main`.
+- Không tạo release thủ công bằng `gh release create` nếu CI tag workflow đang lo phần đó (trừ khi CI fail và user nhờ làm tay).
