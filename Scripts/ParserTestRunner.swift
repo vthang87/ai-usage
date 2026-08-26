@@ -47,6 +47,36 @@ struct ParserTestRunner {
         let currentWeekly = UsageWindow(label: "Weekly", usedPercent: 2, resetsAt: Date().addingTimeInterval(7 * 24 * 3600))
         expect(UnusedQuotaAlertPolicy.didReset(previous: previousWeekly, current: currentWeekly), "detect window reset")
         expect(!UnusedQuotaAlertPolicy.didReset(previous: currentWeekly, current: currentWeekly), "same window is not a reset")
+        let jitterPrevious = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 0,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(4 * 3600)
+        )
+        let jitterCurrent = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 0,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(4 * 3600 + 600)
+        )
+        expect(!UnusedQuotaAlertPolicy.didReset(previous: jitterPrevious, current: jitterCurrent), "ignore mid-cycle resetsAt jitter")
+        expect(
+            UnusedQuotaAlertPolicy.didReset(
+                previous: UsageWindow(
+                    label: "5 Hour",
+                    usedPercent: 90,
+                    quotaDescription: "300 min window",
+                    resetsAt: Date().addingTimeInterval(2 * 60)
+                ),
+                current: UsageWindow(
+                    label: "5 Hour",
+                    usedPercent: 0,
+                    quotaDescription: "300 min window",
+                    resetsAt: Date().addingTimeInterval(5 * 3600)
+                )
+            ),
+            "detect 5 hour reset near expiry"
+        )
         expect(
             UnusedQuotaAlertPolicy.resetCandidates(
                 previous: .empty,

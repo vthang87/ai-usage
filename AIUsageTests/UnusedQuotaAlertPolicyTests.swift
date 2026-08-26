@@ -57,6 +57,38 @@ final class UnusedQuotaAlertPolicyTests: XCTestCase {
         XCTAssertFalse(UnusedQuotaAlertPolicy.didReset(previous: current, current: current))
     }
 
+    func testIgnoresMidCycleResetsAtJitter() {
+        let previous = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 0,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(4 * 3600)
+        )
+        let drifted = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 0,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(4 * 3600 + 600)
+        )
+        XCTAssertFalse(UnusedQuotaAlertPolicy.didReset(previous: previous, current: drifted))
+    }
+
+    func testDetectsFiveHourResetNearExpiry() {
+        let previous = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 90,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(2 * 60)
+        )
+        let current = UsageWindow(
+            label: "5 Hour",
+            usedPercent: 0,
+            quotaDescription: "300 min window",
+            resetsAt: Date().addingTimeInterval(5 * 3600)
+        )
+        XCTAssertTrue(UnusedQuotaAlertPolicy.didReset(previous: previous, current: current))
+    }
+
     func testResetCandidatesSkipEmptyPreviousSnapshot() {
         let current = UsageSnapshot.placeholder
         let found = UnusedQuotaAlertPolicy.resetCandidates(
