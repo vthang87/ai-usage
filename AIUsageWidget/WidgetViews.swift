@@ -94,7 +94,6 @@ private struct UsageRingSlot: Identifiable {
     let isOnline: Bool
     let showsGlyph: Bool
     let resetsAt: Date?
-    let resetCreditsAvailable: Int?
 
     var fraction: CGFloat? {
         guard let percent else { return nil }
@@ -108,9 +107,6 @@ private struct UsageRingSlot: Identifiable {
 
     var resetLabel: String {
         guard showsGlyph else { return " " }
-        if let credits = UsageFormatting.resetCredits(resetCreditsAvailable) {
-            return credits
-        }
         return UsageFormatting.reset(resetsAt)
     }
 
@@ -119,14 +115,13 @@ private struct UsageRingSlot: Identifiable {
             if percent >= 95 { return .red }
             if percent >= 80 { return .yellow }
         }
-        switch id {
-        case "Other Models":
+        if id.contains("Other Models") {
             return Color(red: 0.40, green: 0.28, blue: 0.86)
-        case "Cursor", "Cursor Models":
-            return Color(red: 0.67, green: 0.36, blue: 1.0)
-        default:
-            return Color(red: 0.22, green: 0.90, blue: 0.72)
         }
+        if id.hasPrefix("Cursor") {
+            return Color(red: 0.67, green: 0.36, blue: 1.0)
+        }
+        return Color(red: 0.22, green: 0.90, blue: 0.72)
     }
 
     var accessibilityLabel: String {
@@ -141,58 +136,24 @@ private struct UsageRingSlot: Identifiable {
             percent: nil,
             isOnline: false,
             showsGlyph: false,
-            resetsAt: nil,
-            resetCreditsAvailable: nil
+            resetsAt: nil
         )
     }
 
     static func slots(from snapshot: UsageSnapshot, capacity: Int) -> [UsageRingSlot] {
-        let codexWindow = snapshot.codex?.windows.max {
-            ($0.usedPercent ?? -1) < ($1.usedPercent ?? -1)
-        }
-        var items: [UsageRingSlot] = [
+        var items = WidgetRingLayout.items(from: snapshot, capacity: capacity).map { item in
             UsageRingSlot(
-                id: "Codex",
-                assetName: "CodexAppIcon",
-                percent: codexWindow?.usedPercent ?? snapshot.codex?.primaryPercent,
-                isOnline: snapshot.codex?.isOnline == true,
+                id: item.id,
+                assetName: item.provider == "Cursor" ? "CursorAppIcon" : "CodexAppIcon",
+                percent: item.percent,
+                isOnline: item.isOnline,
                 showsGlyph: true,
-                resetsAt: codexWindow?.resetsAt,
-                resetCreditsAvailable: snapshot.codex?.resetCreditsAvailable
-            ),
-        ]
-
-        if let cursor = snapshot.cursor, !cursor.windows.isEmpty {
-            for window in cursor.windows.prefix(max(0, capacity - items.count)) {
-                items.append(
-                    UsageRingSlot(
-                        id: window.label,
-                        assetName: "CursorAppIcon",
-                        percent: window.usedPercent,
-                        isOnline: cursor.isOnline,
-                        showsGlyph: true,
-                        resetsAt: window.resetsAt,
-                        resetCreditsAvailable: nil
-                    )
-                )
-            }
-        } else {
-            items.append(
-                UsageRingSlot(
-                    id: "Cursor",
-                    assetName: "CursorAppIcon",
-                    percent: snapshot.cursor?.primaryPercent,
-                    isOnline: snapshot.cursor?.isOnline == true,
-                    showsGlyph: true,
-                    resetsAt: snapshot.cursor?.windows.first?.resetsAt,
-                    resetCreditsAvailable: nil
-                )
+                resetsAt: item.resetsAt
             )
         }
-
         while items.count < capacity {
             items.append(.empty(id: "empty-\(items.count)"))
         }
-        return Array(items.prefix(capacity))
+        return items
     }
 }

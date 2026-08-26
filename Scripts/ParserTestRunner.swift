@@ -83,6 +83,48 @@ struct ParserTestRunner {
             settings: alertSettings
         )
         expect(resetFound.count == 1 && resetFound.first?.window == "Weekly", "reset candidate for new cycle")
+
+        let fiveHourReset = Date().addingTimeInterval(5 * 3600)
+        let widgetSnap = UsageSnapshot(
+            codex: ProviderUsage(
+                name: "Codex",
+                isAvailable: true,
+                isOnline: true,
+                windows: [
+                    UsageWindow(label: "5 Hour", usedPercent: 5, resetsAt: fiveHourReset),
+                    UsageWindow(label: "Weekly", usedPercent: 1, resetsAt: Date().addingTimeInterval(7 * 24 * 3600)),
+                ],
+                lastError: nil,
+                resetCreditsAvailable: 1
+            ),
+            cursor: ProviderUsage(
+                name: "Cursor",
+                isAvailable: true,
+                isOnline: true,
+                windows: [
+                    UsageWindow(label: "Cursor Models", usedPercent: 13, resetsAt: Date().addingTimeInterval(26 * 24 * 3600)),
+                    UsageWindow(label: "Other Models", usedPercent: 0, resetsAt: Date().addingTimeInterval(26 * 24 * 3600)),
+                ],
+                lastError: nil
+            ),
+            updatedAt: Date()
+        )
+        expect(
+            WidgetRingLayout.items(from: widgetSnap, capacity: 4).map(\.id) == [
+                "Codex|5 Hour",
+                "Codex|Weekly",
+                "Cursor|Cursor Models",
+                "Cursor|Other Models",
+            ],
+            "medium widget shows each Codex window"
+        )
+        expect(
+            WidgetRingLayout.items(from: widgetSnap, capacity: 2).map(\.id) == [
+                "Codex|5 Hour",
+                "Cursor|Cursor Models",
+            ],
+            "small widget prefers Codex 5 Hour"
+        )
         expect(CodexRateLimitsParser.label(forMinutes: 300) == "5 Hour", "label 5 hour")
         expect(CodexRateLimitsParser.label(forMinutes: 10080) == "Weekly", "label weekly")
         expect(CodexRateLimitsParser.label(forMinutes: 15) == "15 min", "label 15 min")
