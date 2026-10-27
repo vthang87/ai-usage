@@ -4,29 +4,24 @@ struct CursorProvider: UsageProvider {
     private static let usageURL = URL(string: "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage")!
 
     func collect() async -> ProviderUsage {
-        guard let binary = BinaryLocator.find(names: ["agent", "cursor-agent"]) else {
-            return .unavailable(name: "Cursor", message: "Cursor CLI not found")
+        let session = await Task.detached {
+            CursorAccessToken.session()
+        }.value
+
+        let token: String
+        switch session {
+        case let .token(value):
+            token = value
+        case .needsKeychainUnlock:
+            return .offline(
+                name: "Cursor",
+                message: "Allow AI Usage to read Cursor Safe Storage in Keychain"
+            )
+        case .missing:
+            return .offline(name: "Cursor", message: "Not signed in")
         }
 
         do {
-            let tokenAndAuth = try await Task.detached {
-                let statusJSON = try ProcessCapture.run(
-                    executable: binary,
-                    arguments: ["status", "--format", "json"]
-                )
-                let statusData = Data(statusJSON.utf8)
-                let authenticated = CursorAccessToken.isAuthenticated(statusData)
-                let token = CursorAccessToken.fromAgentStatusJSON(statusData)
-                    ?? CursorAccessToken.fromStateDatabase()
-                return (authenticated, token)
-            }.value
-
-            guard tokenAndAuth.0 else {
-                return .offline(name: "Cursor", message: "Not signed in")
-            }
-            guard let token = tokenAndAuth.1 else {
-                return .offline(name: "Cursor", message: "No local access token")
-            }
 
             let windows = try await fetchUsage(token: token)
             return ProviderUsage(

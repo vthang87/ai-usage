@@ -2,7 +2,7 @@ import Foundation
 
 public enum UnusedQuotaAlertPolicy {
     public static func isFiveHourWindow(_ window: UsageWindow) -> Bool {
-        if window.label == "5 Hour" { return true }
+        if window.label == "5 Hour" || window.label == "Session" { return true }
         if let quota = window.quotaDescription, quota.contains("300 min") { return true }
         return false
     }
@@ -71,10 +71,10 @@ public enum UnusedQuotaAlertPolicy {
     ) -> [ResetCandidate] {
         guard settings.resetOccurredAlertsEnabled, previous.updatedAt != .distantPast else { return [] }
         var items: [ResetCandidate] = []
-        for (name, previousUsage, currentUsage) in [
-            ("Codex", previous.codex, current.codex),
-            ("Cursor", previous.cursor, current.cursor),
-        ] {
+        let pairs = zip(previous.providers, current.providers).map { previous, current in
+            (previous.name, previous.usage, current.usage)
+        }
+        for (name, previousUsage, currentUsage) in pairs {
             guard let previousUsage, let currentUsage else { continue }
             let previousWindows = Dictionary(uniqueKeysWithValues: previousUsage.windows.map { ($0.label, $0) })
             for window in currentUsage.windows {
@@ -104,7 +104,7 @@ public enum UnusedQuotaAlertPolicy {
 
     public static func candidates(in snapshot: UsageSnapshot, now: Date = Date(), settings: AppSettings) -> [AlertCandidate] {
         var items: [AlertCandidate] = []
-        for (name, usage) in [("Codex", snapshot.codex), ("Cursor", snapshot.cursor)] {
+        for (name, usage) in snapshot.providers {
             guard let usage else { continue }
             for window in usage.windows {
                 guard shouldNotify(window: window, now: now, settings: settings),

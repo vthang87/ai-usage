@@ -35,7 +35,7 @@ public enum WidgetRingLayout {
 
         var picked: [WidgetRingItem] = []
         var remaining = all
-        for provider in ["Codex", "Cursor"] {
+        for provider in ["Codex", "Cursor", "Claude"] {
             guard picked.count < capacity, let preferred = preferredWindow(in: remaining, provider: provider) else {
                 continue
             }
@@ -51,7 +51,7 @@ public enum WidgetRingLayout {
 
     private static func windows(in snapshot: UsageSnapshot) -> [WidgetRingItem] {
         var items: [WidgetRingItem] = []
-        for (name, usage) in [("Codex", snapshot.codex), ("Cursor", snapshot.cursor)] {
+        for (name, usage) in snapshot.providers {
             guard let usage else { continue }
             if usage.windows.isEmpty {
                 items.append(

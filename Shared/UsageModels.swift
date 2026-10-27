@@ -71,20 +71,54 @@ public struct ProviderUsage: Codable, Sendable, Equatable {
 public struct UsageSnapshot: Codable, Sendable, Equatable {
     public var codex: ProviderUsage?
     public var cursor: ProviderUsage?
+    public var claude: ProviderUsage?
     public var updatedAt: Date
 
-    public init(codex: ProviderUsage?, cursor: ProviderUsage?, updatedAt: Date) {
+    public init(
+        codex: ProviderUsage?,
+        cursor: ProviderUsage?,
+        claude: ProviderUsage? = nil,
+        updatedAt: Date
+    ) {
         self.codex = codex
         self.cursor = cursor
+        self.claude = claude
         self.updatedAt = updatedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        codex = try container.decodeIfPresent(ProviderUsage.self, forKey: .codex)
+        cursor = try container.decodeIfPresent(ProviderUsage.self, forKey: .cursor)
+        claude = try container.decodeIfPresent(ProviderUsage.self, forKey: .claude)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(codex, forKey: .codex)
+        try container.encodeIfPresent(cursor, forKey: .cursor)
+        try container.encodeIfPresent(claude, forKey: .claude)
+        try container.encode(updatedAt, forKey: .updatedAt)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case codex
+        case cursor
+        case claude
+        case updatedAt
     }
 
     public static var empty: UsageSnapshot {
         UsageSnapshot(codex: nil, cursor: nil, updatedAt: .distantPast)
     }
 
+    public var providers: [(name: String, usage: ProviderUsage?)] {
+        [("Codex", codex), ("Cursor", cursor), ("Claude", claude)]
+    }
+
     public var headlinePercent: Int? {
-        let percents = [codex?.primaryPercent, cursor?.primaryPercent].compactMap { $0 }
+        let percents = providers.compactMap { $0.usage?.primaryPercent }
         guard let highest = percents.max() else { return nil }
         return Int(highest.rounded())
     }

@@ -175,6 +175,28 @@ struct ParserTestRunner {
         expect(usageWindows[0].quotaDescription == "23222 / 40000", "cursor quota")
         expect(usageWindows[0].resetsAt?.timeIntervalSince1970 == 1_771_077_734, "cursor reset")
 
+        let sealed = SafeStorageCryptor.encrypt("session-token", password: "test-password")
+        expect(
+            sealed != nil && SafeStorageCryptor.decrypt(base64: sealed!, password: "test-password") == "session-token",
+            "safe storage round trip"
+        )
+        expect(
+            sealed != nil && SafeStorageCryptor.decrypt(base64: sealed!, password: "wrong-password") == nil,
+            "safe storage rejects wrong password"
+        )
+
+        let claudeData = try Data(contentsOf: fixtures.appendingPathComponent("claude-usage.json"))
+        let claudeJSON = try JSONSerialization.jsonObject(with: claudeData)
+        let claudeWindows = try ClaudeUsageParser.windows(from: claudeJSON)
+        expect(claudeWindows.map(\.label) == ["Session", "Weekly"], "claude labels")
+        expect(claudeWindows[0].usedPercent == 28, "claude session percent")
+        expect(claudeWindows[1].usedPercent == 15, "claude weekly percent")
+        expect(claudeWindows[0].resetsAt != nil, "claude session reset")
+
+        let legacy = Data(#"{"updatedAt":0}"#.utf8)
+        let decoded = try JSONDecoder().decode(UsageSnapshot.self, from: legacy)
+        expect(decoded.claude == nil && decoded.cursor == nil, "legacy snapshot omits claude")
+
         do {
             _ = try CursorUsageParser.windows(from: ["billingCycleEnd": "1771077734000"])
             expect(false, "missing planUsage should throw")

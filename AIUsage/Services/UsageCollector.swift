@@ -15,6 +15,7 @@ final class UsageCollector {
     private let notifier: UnusedQuotaNotifier
     private let codex: CodexProvider
     private let cursor: CursorProvider
+    private let claude: ClaudeProvider
     private var timer: Timer?
     private var activity: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
@@ -23,12 +24,14 @@ final class UsageCollector {
     init(
         store: UsageStore = UsageStore(),
         codex: CodexProvider = CodexProvider(),
-        cursor: CursorProvider = CursorProvider()
+        cursor: CursorProvider = CursorProvider(),
+        claude: ClaudeProvider = ClaudeProvider()
     ) {
         self.store = store
         self.notifier = UnusedQuotaNotifier(store: store)
         self.codex = codex
         self.cursor = cursor
+        self.claude = claude
         self.snapshot = store.loadSnapshot() ?? .empty
         let settings = store.loadSettings()
         self.settings = settings
@@ -44,7 +47,7 @@ final class UsageCollector {
                 .suddenTerminationDisabled,
                 .userInitiatedAllowingIdleSystemSleep,
             ],
-            reason: "Polling Codex and Cursor usage"
+            reason: "Polling Codex, Cursor, and Claude usage"
         )
         observeWake()
         _ = LoginItemController.apply(enabled: settings.launchAtLoginEnabled)
@@ -63,10 +66,12 @@ final class UsageCollector {
 
         async let codexUsage = collectCodex()
         async let cursorUsage = collectCursor()
+        async let claudeUsage = collectClaude()
         let previous = snapshot
         let next = UsageSnapshot(
             codex: await codexUsage,
             cursor: await cursorUsage,
+            claude: await claudeUsage,
             updatedAt: Date()
         )
         snapshot = next
@@ -131,6 +136,12 @@ final class UsageCollector {
     private func collectCursor() async -> ProviderUsage {
         await Task.detached { [cursor] in
             await cursor.collect()
+        }.value
+    }
+
+    private func collectClaude() async -> ProviderUsage {
+        await Task.detached { [claude] in
+            await claude.collect()
         }.value
     }
 }

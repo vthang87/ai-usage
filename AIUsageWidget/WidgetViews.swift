@@ -66,12 +66,19 @@ private struct UsageRingCell: View {
                 }
 
                 if slot.showsGlyph {
-                    Image(slot.assetName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: ringSize * 0.52, height: ringSize * 0.52)
-                        .clipShape(RoundedRectangle(cornerRadius: ringSize * 0.13, style: .continuous))
-                        .opacity(0.92)
+                    Group {
+                        if let systemImage = slot.systemImage {
+                            Image(systemName: systemImage)
+                                .font(.system(size: ringSize * 0.34, weight: .medium))
+                        } else {
+                            Image(slot.assetName)
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(RoundedRectangle(cornerRadius: ringSize * 0.13, style: .continuous))
+                        }
+                    }
+                    .frame(width: ringSize * 0.52, height: ringSize * 0.52)
+                    .opacity(0.92)
                 }
             }
             .frame(width: ringSize, height: ringSize)
@@ -102,6 +109,7 @@ private struct UsageRingCell: View {
 private struct UsageRingSlot: Identifiable {
     let id: String
     let assetName: String
+    let systemImage: String?
     let percent: Double?
     let isOnline: Bool
     let showsGlyph: Bool
@@ -134,6 +142,9 @@ private struct UsageRingSlot: Identifiable {
         if id.hasPrefix("Cursor") {
             return Color(red: 0.67, green: 0.36, blue: 1.0)
         }
+        if id.hasPrefix("Claude") {
+            return Color(red: 0.85, green: 0.47, blue: 0.34)
+        }
         return Color(red: 0.22, green: 0.90, blue: 0.72)
     }
 
@@ -146,6 +157,7 @@ private struct UsageRingSlot: Identifiable {
         UsageRingSlot(
             id: id,
             assetName: "CodexAppIcon",
+            systemImage: nil,
             percent: nil,
             isOnline: false,
             showsGlyph: false,
@@ -159,6 +171,7 @@ private struct UsageRingSlot: Identifiable {
             UsageRingSlot(
                 id: item.id,
                 assetName: item.provider == "Cursor" ? "CursorAppIcon" : "CodexAppIcon",
+                systemImage: item.provider == "Claude" ? "sparkles" : nil,
                 percent: item.percent,
                 isOnline: item.isOnline,
                 showsGlyph: true,

@@ -12,6 +12,7 @@ struct MenuBarView: View {
             header
             providerSection(title: "Codex", usage: collector.snapshot.codex)
             providerSection(title: "Cursor", usage: collector.snapshot.cursor)
+            providerSection(title: "Claude", usage: collector.snapshot.claude)
             updateStatusLine
             Divider()
             HStack {
@@ -161,10 +162,7 @@ struct MenuBarView: View {
     }
 
     private func providerMark(for title: String) -> some View {
-        Image(title == "Cursor" ? "CursorAppIcon" : "CodexAppIcon")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 16, height: 16)
+        ProviderIcon(name: title, side: 16)
     }
 
     private func percentColor(_ value: Double?) -> Color {

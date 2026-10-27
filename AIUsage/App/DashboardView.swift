@@ -40,10 +40,15 @@ struct DashboardView: View {
                     fallbackName: "Cursor",
                     showExactResetDateTime: collector.settings.showExactResetDateTime
                 )
+                ProviderCard(
+                    usage: collector.snapshot.claude,
+                    fallbackName: "Claude",
+                    showExactResetDateTime: collector.settings.showExactResetDateTime
+                )
             }
         }
         .padding(20)
-        .frame(minWidth: 520, minHeight: 280)
+        .frame(minWidth: 780, minHeight: 280)
     }
 }
 
@@ -55,10 +60,7 @@ private struct ProviderCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(fallbackName == "Cursor" ? "CursorAppIcon" : "CodexAppIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
+                ProviderIcon(name: fallbackName, side: 18)
                 Text(usage?.name ?? fallbackName)
                     .font(.headline)
                 Spacer()
